@@ -96,6 +96,8 @@ class GeoRect extends Rectangle<double> {
     return GeoRect(GeoPoint.zero, GeoPoint.zero);
   }
 
+  bool get isEmpty => width <= 0 || height <= 0;
+  bool get isNotEmpty => width > 0 && height > 0;
   GeoRect extand({int margin = 0}) {
     final m = GeoCell.size * margin.toDouble();
     return GeoRect(
