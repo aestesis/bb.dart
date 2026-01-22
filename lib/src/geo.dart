@@ -1,5 +1,7 @@
+import 'dart:ffi';
 import 'dart:math';
 
+import 'package:bb_dart/bb_dart.dart';
 import 'package:collection/collection.dart';
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,19 +18,19 @@ class GeoPoint extends Point<double> {
     double lng = 0;
     double lat = 0;
     if (json.containsKey('type') && json['type'] == 'Point') {
-      lng = json['coordinates'][0];
-      lat = json['coordinates'][1];
+      lng = jsonDouble(json['coordinates'][0]);
+      lat = jsonDouble(json['coordinates'][1]);
       return GeoPoint(lng: lng, lat: lat);
     }
     if (json.containsKey('lat')) {
-      lat =  json['lat'];
+      lat = jsonDouble(json['lat']);
     } else if (json.containsKey('latitude')) {
-      lat = json['latitude'];
+      lat = jsonDouble(json['latitude']);
     }
     if (json.containsKey('lng')) {
-      lng = json['lng'];
+      lng = jsonDouble(json['lng']);
     } else if (json.containsKey('longitude')) {
-      lng = json['longitude'];
+      lng = jsonDouble(json['longitude']);
     }
     return GeoPoint(lng: lng, lat: lat);
   }
@@ -124,7 +126,7 @@ class GeoRect extends Rectangle<double> {
     'type': 'Polygon',
     'coordinates': [
       [
-        [sw.lng, sw.lng],
+        [sw.lng, sw.lat],
         [sw.lng, ne.lat],
         [ne.lng, ne.lat],
         [ne.lng, sw.lat],
@@ -137,6 +139,15 @@ class GeoRect extends Rectangle<double> {
       final ne = GeoPoint.fromJson(json['northeast']);
       final sw = GeoPoint.fromJson(json['southwest']);
       return GeoRect(sw, ne);
+    }
+    if (json.containsKey('type') &&
+        json.containsKey('coordinates') &&
+        json['type'] == 'Polygon' &&
+        json['coordinates'] is List) {
+      final points = (json['coordinates'] as List).map(
+        (jc) => GeoPoint(lng: jc[0], lat: jc[1]),
+      );
+      return GeoRect.boundsFromPoints(points);
     }
     throw Exception('not implemented');
   }
