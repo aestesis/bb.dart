@@ -2,6 +2,44 @@ import 'package:collection/collection.dart';
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+String jsonString(dynamic json) {
+  if (json == null) return '';
+  if (json is String) return json;
+  if (json is num) return json.toString();
+  return '';
+}
+
+int jsonInt(dynamic json) {
+  if (json == null) return 0;
+  if (json is String) return int.tryParse(json) ?? 0;
+  if (json is num) return json.toInt();
+  return 0;
+}
+
+bool jsonBool(dynamic json, {bool or = false}) {
+  if (json == null) return or;
+  if (json is bool) return json;
+  if (json is num) return json != 0;
+  return or;
+}
+
+double jsonDouble(dynamic json) {
+  if (json == null) return 0;
+  if (json is String) return double.tryParse(json) ?? 0;
+  if (json is num) return json.toDouble();
+  return 0;
+}
+
+String? jsonStringNull(String? a) => a == null
+    ? null
+    : a.trim().isEmpty
+    ? null
+    : a.trim();
+
+String jsonStringNoNull(String? a) => a == null ? '' : a.trim();
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 // http://jsonpatch.com/
 //
 // partial port from https://github.com/chbrown/rfc6902
@@ -37,8 +75,9 @@ class JsonPointer {
         o = o[k];
       } else {
         throw OperationError(
-            function: 'JsonPointer.parent()',
-            error: 'wrong type ${o.runtimeType}');
+          function: 'JsonPointer.parent()',
+          error: 'wrong type ${o.runtimeType}',
+        );
       }
     }
     return o;
@@ -69,8 +108,9 @@ void jsonPatch({required dynamic root, required List<dynamic> patch}) {
           o[k] = _deepCopy(op['value']);
         } else {
           throw OperationError(
-              function: 'jsonPatch()-add',
-              error: 'wrong type ${o.runtimeType}');
+            function: 'jsonPatch()-add',
+            error: 'wrong type ${o.runtimeType}',
+          );
         }
         break;
       case 'remove':
@@ -80,8 +120,9 @@ void jsonPatch({required dynamic root, required List<dynamic> patch}) {
           o.remove(k);
         } else {
           throw OperationError(
-              function: 'jsonPatch()-remove',
-              error: 'wrong type ${o.runtimeType}');
+            function: 'jsonPatch()-remove',
+            error: 'wrong type ${o.runtimeType}',
+          );
         }
         break;
       case 'replace':
@@ -91,29 +132,38 @@ void jsonPatch({required dynamic root, required List<dynamic> patch}) {
           o[k] = _deepCopy(op['value']);
         } else {
           throw OperationError(
-              function: 'jsonPatch()-replace',
-              error: 'wrong type ${o.runtimeType}');
+            function: 'jsonPatch()-replace',
+            error: 'wrong type ${o.runtimeType}',
+          );
         }
         break;
       case 'move':
         final pfrom = JsonPointer(path: op['from']);
         final v = pfrom.parent(root: root)[pfrom.key];
-        jsonPatch(root: root, patch: [
-          {'op': 'remove', 'path': op['from']},
-          {'op': 'add', 'path': op['path'], 'value': v}
-        ]);
+        jsonPatch(
+          root: root,
+          patch: [
+            {'op': 'remove', 'path': op['from']},
+            {'op': 'add', 'path': op['path'], 'value': v},
+          ],
+        );
         break;
       case 'copy':
         final pfrom = JsonPointer(path: op['from']);
         final v = pfrom.parent(root: root)[pfrom.key];
-        jsonPatch(root: root, patch: [
-          {'op': 'add', 'path': op['path'], 'value': _deepCopy(v)}
-        ]);
+        jsonPatch(
+          root: root,
+          patch: [
+            {'op': 'add', 'path': op['path'], 'value': _deepCopy(v)},
+          ],
+        );
         break;
       case 'test':
         if (!_equals(o[k], op['value'])) {
           throw OperationError(
-              function: 'jsonPatch()-test', error: 'test error');
+            function: 'jsonPatch()-test',
+            error: 'test error',
+          );
         }
         break;
       default:
@@ -124,10 +174,11 @@ void jsonPatch({required dynamic root, required List<dynamic> patch}) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-List<dynamic>? jsonDiff(
-    {required dynamic from,
-    required dynamic to,
-    JsonPointer pointer = const JsonPointer()}) {
+List<dynamic>? jsonDiff({
+  required dynamic from,
+  required dynamic to,
+  JsonPointer pointer = const JsonPointer(),
+}) {
   if (from is Map<String, dynamic> && to is Map<String, dynamic>) {
     return _objectDiff(from: from, to: to, pointer: pointer);
   }
@@ -136,7 +187,7 @@ List<dynamic>? jsonDiff(
   }
   if (!_equals(from, to)) {
     return [
-      {'op': 'replace', 'path': pointer.toString(), 'value': to}
+      {'op': 'replace', 'path': pointer.toString(), 'value': to},
     ];
   }
   return [];
@@ -144,24 +195,32 @@ List<dynamic>? jsonDiff(
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-List<dynamic>? _arrayDiff(
-    {required List<dynamic> from,
-    required List<dynamic> to,
-    required JsonPointer pointer}) {
+List<dynamic>? _arrayDiff({
+  required List<dynamic> from,
+  required List<dynamic> to,
+  required JsonPointer pointer,
+}) {
   if ((const DeepCollectionEquality()).equals(from, to)) return [];
   return _ArrayDistance(from: from, to: to, pointer: pointer).result;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-List<dynamic> _objectDiff(
-    {required Map<String, dynamic> from,
-    required Map<String, dynamic> to,
-    required JsonPointer pointer}) {
+List<dynamic> _objectDiff({
+  required Map<String, dynamic> from,
+  required Map<String, dynamic> to,
+  required JsonPointer pointer,
+}) {
   final List<dynamic> ops = [];
-  _addedKeys(from: from, to: to).forEach((k) => ops
-      .add({'op': 'add', 'path': pointer.add(k).toString(), 'value': to[k]}));
+  _addedKeys(from: from, to: to).forEach(
+    (k) => ops.add({
+      'op': 'add',
+      'path': pointer.add(k).toString(),
+      'value': to[k],
+    }),
+  );
   _removedKeys(from: from, to: to).forEach(
-      (k) => ops.add({'op': 'remove', 'path': pointer.add(k).toString()}));
+    (k) => ops.add({'op': 'remove', 'path': pointer.add(k).toString()}),
+  );
   _commonKeys(from: from, to: to).forEach((k) {
     ops.addAll(jsonDiff(from: from[k], to: to[k], pointer: pointer.add(k))!);
   });
@@ -184,14 +243,16 @@ dynamic _deepCopy(dynamic json) {
     return json.map<String, dynamic>((k, v) => MapEntry(k, _deepCopy(v)));
   }
   throw OperationError(
-      function: '_deepCopy()',
-      error:
-          'wrong type ${json.runtimeType}'); // MapEntry<String, dynamic>(e.key,e.value)
+    function: '_deepCopy()',
+    error: 'wrong type ${json.runtimeType}',
+  ); // MapEntry<String, dynamic>(e.key,e.value)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-Set<String> _addedKeys(
-    {required Map<String, dynamic> from, required Map<String, dynamic> to}) {
+Set<String> _addedKeys({
+  required Map<String, dynamic> from,
+  required Map<String, dynamic> to,
+}) {
   final Set<String> keys = {};
   for (final k in to.keys) {
     if (!from.containsKey(k)) {
@@ -202,14 +263,16 @@ Set<String> _addedKeys(
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-Set<String> _removedKeys(
-        {required Map<String, dynamic> from,
-        required Map<String, dynamic> to}) =>
-    _addedKeys(from: to, to: from);
+Set<String> _removedKeys({
+  required Map<String, dynamic> from,
+  required Map<String, dynamic> to,
+}) => _addedKeys(from: to, to: from);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-Set<String> _commonKeys(
-    {required Map<String, dynamic> from, required Map<String, dynamic> to}) {
+Set<String> _commonKeys({
+  required Map<String, dynamic> from,
+  required Map<String, dynamic> to,
+}) {
   final Set<String> keys = {};
   for (final k in to.keys) {
     if (from.containsKey(k)) {
@@ -237,31 +300,45 @@ class _ArrayDistance {
   JsonPointer pointer;
   Map<String, List<dynamic>> matrix = {};
   List<dynamic>? result;
-  _ArrayDistance(
-      {required this.from, required this.to, required this.pointer}) {
+  _ArrayDistance({
+    required this.from,
+    required this.to,
+    required this.pointer,
+  }) {
     matrix['0,0'] = [];
     final aops = _arrayOperations(i: from.length, j: to.length);
     result = aops.fold<_ReduceInfo>(_ReduceInfo(), (r, aop) {
       if (aop['op'] == 'add') {
         final pi = aop['index'] + 1 + r.padding;
         final token = pi < from.length + r.padding ? pi.toString() : '-';
-        return _ReduceInfo(ops: r.ops, padding: r.padding + 1, op: {
-          'op': 'add',
-          'path': pointer.add(token).toString(),
-          'value': aop['value']
-        });
+        return _ReduceInfo(
+          ops: r.ops,
+          padding: r.padding + 1,
+          op: {
+            'op': 'add',
+            'path': pointer.add(token).toString(),
+            'value': aop['value'],
+          },
+        );
       }
       if (aop['op'] == 'remove') {
-        return _ReduceInfo(ops: r.ops, padding: r.padding - 1, op: {
-          'op': 'remove',
-          'path': pointer.add((aop['index'] + r.padding).toString()).toString()
-        });
+        return _ReduceInfo(
+          ops: r.ops,
+          padding: r.padding - 1,
+          op: {
+            'op': 'remove',
+            'path': pointer
+                .add((aop['index'] + r.padding).toString())
+                .toString(),
+          },
+        );
       }
       // replace
       final ops = jsonDiff(
-          from: aop['original'],
-          to: aop['value'],
-          pointer: pointer.add((aop['index'] + r.padding).toString()))!;
+        from: aop['original'],
+        to: aop['value'],
+        pointer: pointer.add((aop['index'] + r.padding).toString()),
+      )!;
       return _ReduceInfo(ops: r.ops! + ops, padding: r.padding);
     }).ops;
   }
@@ -289,7 +366,7 @@ class _ArrayDistance {
           'op': 'replace',
           'index': i - 1,
           'original': from[i - 1],
-          'value': to[j - 1]
+          'value': to[j - 1],
         });
         alts.add(ops);
       }
@@ -300,5 +377,6 @@ class _ArrayDistance {
     return cell;
   }
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////

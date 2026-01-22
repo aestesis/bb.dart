@@ -21,7 +21,7 @@ class GeoPoint extends Point<double> {
       return GeoPoint(lng: lng, lat: lat);
     }
     if (json.containsKey('lat')) {
-      lat = json['lat'];
+      lat =  json['lat'];
     } else if (json.containsKey('latitude')) {
       lat = json['latitude'];
     }
