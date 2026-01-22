@@ -356,7 +356,7 @@ extension ListPermuationExt<T> on List<T> {
 final Random random = Random(DateTime.now().millisecondsSinceEpoch);
 
 extension RandomExt on Random {
-  String alphaID() {
+  String alphaId() {
     var data = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     var id = '';
     for (var i = 0; i < 24; i++) {
