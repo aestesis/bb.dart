@@ -13,6 +13,7 @@ dependencies:
 
   diacritic: any
   image: any
+  stack_trace: any
 
 
 dev_dependencies:
