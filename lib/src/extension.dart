@@ -1,0 +1,483 @@
+import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:collection/collection.dart';
+import 'package:intl/intl.dart';
+import 'package:diacritic/diacritic.dart' as dia;
+import 'package:image/image.dart' as img;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension DoubleExtension on double {
+  String toCurrencyString({
+    int? decimal,
+    String currency = '€',
+    String locale = 'fr_FR',
+  }) {
+    NumberFormat nf = NumberFormat(null, locale);
+    nf.maximumFractionDigits = decimal ?? (round() == this ? 0 : 2);
+    return '${nf.format(this)} $currency';
+  }
+
+  String toFixed([int? count]) {
+    NumberFormat nf = NumberFormat('##################.##', 'fr_FR');
+    nf.maximumFractionDigits = count ?? (round() == this ? 0 : 2);
+    return nf.format(this);
+  }
+
+  static double? tryParse(String text) {
+    final t = text.replaceAll(RegExp(r' '), '').replaceAll(RegExp(r','), '.');
+    return double.tryParse(t);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension StringExtension on String {
+  // TODO: seek internet for a more utf8 friendly regex
+  static final regexWords = RegExp(
+    r"[a-zA-Z0-9àâäèéêëîïôœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ#]+",
+  );
+  Iterable<String> get words =>
+      regexWords.allMatches(this).map((m) => m.group(0)).whereType<String>();
+
+  String max({required int length, bool ellipsis = false}) =>
+      this.length <= length
+      ? this
+      : (substring(0, length) + (ellipsis ? '..' : ''));
+  String get capitalized {
+    if (isEmpty) return '';
+    return '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
+  }
+
+  bool operator <(String other) => compareTo(other) < 0;
+  bool operator >(String other) => compareTo(other) > 0;
+  bool operator <=(String other) => compareTo(other) <= 0;
+  bool operator >=(String other) => compareTo(other) >= 0;
+
+  int distance(
+    String other, {
+    bool caseSensitive = true,
+    bool ignoreDiacritics = false,
+  }) => _levenshteinDistance(
+    this,
+    other,
+    caseSensitive: caseSensitive,
+    ignoreDiacritics: ignoreDiacritics,
+  );
+
+  String removeDiacritics() => dia.removeDiacritics(this);
+
+  String? ifNotEmpty() => isEmpty ? null : this;
+
+  String addFilename(String filename) {
+    return addToken(Platform.pathSeparator, filename);
+  }
+
+  String addPathSeparator([String? pathSeparator]) {
+    pathSeparator ??= Platform.pathSeparator;
+    if (endsWith(pathSeparator)) {
+      return this;
+    }
+    return this + pathSeparator;
+  }
+
+  String removePathSeparator([String? pathSeparator]) {
+    pathSeparator ??= Platform.pathSeparator;
+    if (endsWith(pathSeparator)) {
+      return substring(0, length - 1);
+    }
+
+    return this;
+  }
+
+  String addToken(String div, String? token) {
+    if (isEmpty) {
+      return token ?? this;
+    } else if (token == null || token.isEmpty) {
+      return this;
+    } else {
+      return this + div + token;
+    }
+  }
+
+  String addTokenIf(String div, String? token) {
+    if (token == null) {
+      return this;
+    } else {
+      return addToken(div, token);
+    }
+  }
+
+  String beforeToken(String token, {String def = ""}) {
+    var n = indexOf(token);
+    return (n >= 0) ? substring(0, n) : def;
+  }
+
+  String beforeToken2(String token, {String? def}) {
+    def ??= this;
+    var n = indexOf(token);
+    return (n >= 0) ? substring(0, n) : def;
+  }
+
+  String beforeTokenLast(String token, {String def = ""}) {
+    var n = lastIndexOf(token);
+    return (n >= 0) ? substring(0, n) : def;
+  }
+
+  String? beforeTokenLast2(String token, {String? def}) {
+    var n = lastIndexOf(token);
+    return (n >= 0) ? substring(0, n) : def;
+  }
+
+  String afterToken(String token, {String def = ""}) {
+    var n = indexOf(token);
+    return (n >= 0) ? substring(n + token.length) : def;
+  }
+
+  String afterTokenOrSelf(String token) {
+    var n = indexOf(token);
+    return (n >= 0) ? substring(n + token.length) : this;
+  }
+
+  String afterTokenLast(String token, {String def = ""}) {
+    var n = lastIndexOf(token);
+    return (n >= 0) ? substring(n + token.length) : def;
+  }
+
+  int? toInt() => int.tryParse(this);
+
+  String fileExt({bool lowercase = true}) {
+    final s = afterTokenLast('.');
+    return lowercase ? s.toLowerCase() : s;
+  }
+
+  bool isFileExt(String ext) => fileExt() == ext;
+
+  String filename({String? pathSeparator}) {
+    final separator = pathSeparator ?? Platform.pathSeparator;
+    return afterTokenLast(separator);
+  }
+
+  String uriFilename() {
+    final s = afterTokenLast('/');
+    var n1 = s.lastIndexOf('?');
+    final n2 = s.lastIndexOf('#');
+    if (n1 > 0 && n2 > 0) {
+      n1 = min(n1, n2);
+    } else if (n2 > 0) {
+      n1 = n2;
+    }
+    return n1 > 0 ? s.substring(0, n1) : s;
+  }
+
+  String fileBasename() {
+    return beforeTokenLast('.');
+  }
+
+  String changeFileExt(String newExt) {
+    int n = lastIndexOf('.');
+    if (n >= 0) {
+      return newExt.isEmpty ? substring(0, n) : substring(0, n + 1) + newExt;
+    } else {
+      return this;
+    }
+  }
+
+  bool get isUri => uri != null;
+  Uri? get uri => Uri.tryParse(this);
+
+  bool equalsIgnoreCase(String? other) {
+    return (other != null) &&
+        (length == other.length) &&
+        toLowerCase() == other.toLowerCase();
+  }
+
+  Uint8List fromHexString() {
+    List<int> res = [];
+    int index = 0;
+    while (index + 1 < length) {
+      res.add(int.parse(this[index] + this[index + 1], radix: 16));
+      index += 2;
+    }
+    return Uint8List.fromList(res);
+  }
+
+  static final _escapeRE = RegExp(r'(?:%[\da-fA-F]{2})+');
+  String get decodedUri => // utf8 compatible cause Uri.decode is only ascii
+      replaceAllMapped(_escapeRE, (m) => Uri.decodeComponent(m[0]!));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+int _levenshteinDistance(
+  String s,
+  String t, {
+  bool caseSensitive = true,
+  bool ignoreDiacritics = false,
+}) {
+  if (!caseSensitive) {
+    s = s.toLowerCase();
+    t = t.toLowerCase();
+  }
+  if (ignoreDiacritics) {
+    s = dia.removeDiacritics(s);
+    t = dia.removeDiacritics(t);
+  }
+  if (s == t) return 0;
+  if (s.isEmpty) return t.length;
+  if (t.isEmpty) return s.length;
+  List<int> v0 = List<int>.filled(t.length + 1, 0);
+  List<int> v1 = List<int>.filled(t.length + 1, 0);
+  for (int i = 0; i < t.length + 1; i < i++) {
+    v0[i] = i;
+  }
+  for (int i = 0; i < s.length; i++) {
+    v1[0] = i + 1;
+    for (int j = 0; j < t.length; j++) {
+      int cost = (s[i] == t[j]) ? 0 : 1;
+      v1[j + 1] = min(v1[j] + 1, min(v0[j + 1] + 1, v0[j] + cost));
+    }
+    for (int j = 0; j < t.length + 1; j++) {
+      v0[j] = v1[j];
+    }
+  }
+  return v1[t.length];
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension DateTimeExtension on DateTime {
+  bool operator <(DateTime other) => compareTo(other) < 0;
+  bool operator >(DateTime other) => compareTo(other) > 0;
+  bool operator <=(DateTime other) => compareTo(other) <= 0;
+  bool operator >=(DateTime other) => compareTo(other) >= 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+extension HexColor on Color {
+  static Color fromHex(String hexString) {
+    try {
+      final buffer = StringBuffer();
+      if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+      buffer.write(hexString.replaceFirst('#', ''));
+      return Color(int.parse(buffer.toString(), radix: 16));
+    } catch (error) {
+      return Colors.green;
+    }
+  }
+
+  String toHex({bool leadingHashSign = true}) =>
+      '${leadingHashSign ? '#' : ''}'
+      '${a8.toRadixString(16).padLeft(2, '0')}'
+      '${r8.toRadixString(16).padLeft(2, '0')}'
+      '${g8.toRadixString(16).padLeft(2, '0')}'
+      '${b8.toRadixString(16).padLeft(2, '0')}';
+
+  Color operator *(Color color) => Color.from(
+    alpha: a * color.a,
+    red: r * color.r,
+    green: g * color.g,
+    blue: color.b,
+  );
+
+  Color operator +(Color color) => Color.from(
+    alpha: a + color.a,
+    red: r + color.r,
+    green: g + color.g,
+    blue: b + color.b,
+  );
+
+  Color mulOpacity(double opacity) => withValues(alpha: opacity * a);
+
+  Color rgbLerp(Color other, double t) => Color.lerp(this, other, t) ?? this;
+  Color hsvLerp(Color other, double t) =>
+      HSVColor.lerp(
+        HSVColor.fromColor(this),
+        HSVColor.fromColor(other),
+        t,
+      )?.toColor() ??
+      this;
+  Color hslLerp(Color other, double t) =>
+      HSLColor.lerp(
+        HSLColor.fromColor(this),
+        HSLColor.fromColor(other),
+        t,
+      )?.toColor() ??
+      this;
+
+  int get a8 => (a * 255).toInt();
+  int get r8 => (r * 255).toInt();
+  int get g8 => (g * 255).toInt();
+  int get b8 => (b * 255).toInt();
+
+  Color mul({double factor = 1, double offset = 0}) {
+    double r = this.r * factor + offset;
+    double g = this.g * factor + offset;
+    double b = this.b * factor + offset;
+    double a = this.a;
+    return Color.from(
+      alpha: max(min(a, 1), 0),
+      red: max(min(r, 1), 0),
+      green: max(min(g, 1), 0),
+      blue: max(min(b, 1), 0),
+    );
+  }
+}
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+extension RectCropExt on Rect {
+  Rect crop({double aspect = 1}) {
+    final r = width / height;
+    if (aspect == r) {
+      return this;
+    }
+    if (aspect > r) {
+      return Rect.fromCenter(
+        center: center,
+        width: width,
+        height: width / aspect,
+      );
+    }
+    return Rect.fromCenter(
+      center: center,
+      width: height * aspect,
+      height: height,
+    );
+  }
+
+  Rect reduce({double margin = 0}) {
+    return Rect.fromLTRB(
+      left + margin,
+      top + margin,
+      right - margin,
+      bottom - margin,
+    );
+  }
+}
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+extension ImageProviderExt on ImageProvider {
+  Future<ui.Image> get uiImage async {
+    final completer = Completer<dynamic>();
+    resolve(const ImageConfiguration()).addListener(
+      ImageStreamListener((ImageInfo info, bool _) => completer.complete(info)),
+    );
+    return (await completer.future as ImageInfo).image;
+  }
+
+  Future<Uint8List> getBytes({
+    ImageFormat format = ImageFormat.png,
+    double quality = 1,
+  }) async {
+    final image = await uiImage;
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final data = byteData!.buffer.asUint8List();
+    switch (format) {
+      case ImageFormat.png:
+        return data;
+      case ImageFormat.jpeg:
+        final i = img.decodePng(data)!;
+        return img.encodeJpg(i, quality: (100 * quality).toInt());
+    }
+  }
+}
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension IterableExt<T> on Iterable<T> {
+  bool containsSome(Iterable<T> list) {
+    for (final i in list) {
+      if (contains(i)) return true;
+    }
+    return false;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension DurationExt on Duration {
+  String toHumanString() => toString().split('.')[0];
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+enum ImageFormat {
+  png,
+  jpeg;
+
+  String get fileExt {
+    switch (this) {
+      case ImageFormat.png:
+        return 'png';
+      case ImageFormat.jpeg:
+        return 'jpg';
+    }
+  }
+
+  Uint8List encode({required img.Image image}) {
+    switch (this) {
+      case ImageFormat.png:
+        return img.encodePng(image);
+      case ImageFormat.jpeg:
+        return img.encodeJpg(image);
+    }
+  }
+
+  Future<bool> save({required String path, required img.Image image}) async {
+    switch (this) {
+      case ImageFormat.png:
+        return await img.encodePngFile(path, image);
+      case ImageFormat.jpeg:
+        return img.encodeJpgFile(path, image);
+    }
+  }
+
+  static ImageFormat? fromFileExt(String fileExt) =>
+      values.firstWhereOrNull((f) => f.fileExt == fileExt);
+  static ImageFormat? fromPath(String path) => fromFileExt(path.fileExt());
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension EnumExt<T extends Enum> on T {
+  String toJson() => toString().split('.')[1];
+}
+
+extension EnumFromList<T extends Enum> on List<T> {
+  T? findJson(String value) => firstWhereOrNull((f) => f.toJson() == value);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension ListPermuationExt<T> on List<T> {
+  List<List<T>> permutations() {
+    void compute<A>(int k, List<A> a, List<List<A>> output) {
+      if (k == 1) {
+        output.add([...a]);
+        return;
+      }
+      for (int i = 0; i < k; i++) {
+        compute(k - 1, a, output);
+        if (k % 2 == 0) {
+          a.swap(i, k - 1);
+        } else {
+          a.swap(0, k - 1);
+        }
+      }
+    }
+
+    final List<List<T>> result = [];
+    compute(length, [...this], result);
+    return result;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////

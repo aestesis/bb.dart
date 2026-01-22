@@ -9,6 +9,11 @@ environment:
 # Add regular dependencies here.
 dependencies:
   collection: any
+  intl: any
+
+  diacritic: any
+  image: any
+
 
 dev_dependencies:
   lints: ^6.0.0
