@@ -5,7 +5,7 @@ import 'extension.dart';
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Run {
-  double get time => DateTime.now().millisecondsSinceEpoch.toDouble() / 1000;
+  static double get time => DateTime.now().millisecondsSinceEpoch.toDouble() / 1000;
   static Timer periodic(Duration tick, void Function(Timer timer) callback) =>
       Timer.periodic(tick, callback);
   static Timer once(Duration wait, VoidCallback callback) =>
