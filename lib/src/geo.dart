@@ -133,6 +133,10 @@ class GeoRect extends Rectangle<double> {
       ],
     ],
   };
+  Map<String, dynamic> toJson() => {
+    'sw': sw.toJson(),
+    'ne': ne.toJson()
+  };
 
   static GeoRect fromJson(Map<String, dynamic> json) {
     if (json.containsKey('northeast') && json.containsKey('southwest')) {
@@ -140,13 +144,18 @@ class GeoRect extends Rectangle<double> {
       final sw = GeoPoint.fromJson(json['southwest']);
       return GeoRect(sw, ne);
     }
+    if (json.containsKey('ne') && json.containsKey('sw')) {
+      final ne = GeoPoint.fromJson(json['ne']);
+      final sw = GeoPoint.fromJson(json['sw']);
+      return GeoRect(sw, ne);
+    }
     if (json.containsKey('type') &&
         json.containsKey('coordinates') &&
         json['type'] == 'Polygon' &&
         json['coordinates'] is List) {
-      final points = (json['coordinates'] as List).map(
+      final points = <GeoPoint>[...((json['coordinates'] as List)[0]).map(
         (jc) => GeoPoint(lng: jc[0], lat: jc[1]),
-      );
+      )];
       return GeoRect.boundsFromPoints(points);
     }
     throw Exception('not implemented');
