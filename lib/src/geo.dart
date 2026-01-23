@@ -11,6 +11,8 @@ class GeoPoint extends Point<double> {
   double get longitude => x;
   double get lat => y;
   double get latitude => y;
+  List<double> get coordinates => [lng, lat];
+  String get text => '$lat,$lng';
   GeoCell get cell => GeoCell.fromPoint(this);
   GeoPoint({double lng = 0, double lat = 0}) : super(lng, lat);
   static GeoPoint fromPoint(Point<double> o) => GeoPoint(lat: o.y, lng: o.x);
@@ -38,9 +40,8 @@ class GeoPoint extends Point<double> {
   Map<String, dynamic> toJson() => {'lat': lat, 'lng': lng};
   Map<String, dynamic> toGeoJson() => {
     'type': 'Point',
-    'coordinates': [lng, lat],
+    'coordinates': coordinates,
   };
-
   @override
   GeoPoint operator +(Point other) {
     return GeoPoint(lng: x + other.x, lat: y + y);
@@ -54,18 +55,13 @@ class GeoPoint extends Point<double> {
   static GeoPoint get lorient => GeoPoint(lng: -3.370, lat: 47.74);
   static GeoPoint get paris => GeoPoint(lng: 2.3522, lat: 48.8566);
   static GeoPoint get zero => GeoPoint(lng: 0, lat: 0);
-
   GeoRect rect({double lat = 0, double lng = 0}) => GeoRect(
     GeoPoint(lat: this.lat - lat, lng: this.lng - lng),
     GeoPoint(lat: this.lat + lat, lng: this.lng + lng),
   );
-
   @override
   String toString() => 'GeoPoint(lat:$lat, lng:$lng)';
-
-  String get text => '$lat,$lng';
   Distance distance(GeoPoint p) {
-    // in meters
     const double earthRadius = 6371000;
     double degreesToRadians(double degrees) {
       return degrees * (pi / 180);
@@ -133,10 +129,7 @@ class GeoRect extends Rectangle<double> {
       ],
     ],
   };
-  Map<String, dynamic> toJson() => {
-    'sw': sw.toJson(),
-    'ne': ne.toJson()
-  };
+  Map<String, dynamic> toJson() => {'sw': sw.toJson(), 'ne': ne.toJson()};
 
   static GeoRect fromJson(Map<String, dynamic> json) {
     if (json.containsKey('northeast') && json.containsKey('southwest')) {
@@ -153,9 +146,11 @@ class GeoRect extends Rectangle<double> {
         json.containsKey('coordinates') &&
         json['type'] == 'Polygon' &&
         json['coordinates'] is List) {
-      final points = <GeoPoint>[...((json['coordinates'] as List)[0]).map(
-        (jc) => GeoPoint(lng: jc[0], lat: jc[1]),
-      )];
+      final points = <GeoPoint>[
+        ...((json['coordinates'] as List)[0]).map(
+          (jc) => GeoPoint(lng: jc[0], lat: jc[1]),
+        ),
+      ];
       return GeoRect.boundsFromPoints(points);
     }
     throw Exception('not implemented');
