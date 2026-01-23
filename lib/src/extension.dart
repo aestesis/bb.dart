@@ -349,6 +349,25 @@ extension ListPermuationExt<T> on List<T> {
     compute(length, [...this], result);
     return result;
   }
+
+  Stream<List<T>> permutationStream() async* {
+    Stream<List<A>> compute<A>(int k, List<A> a) async* {
+      if (k == 1) {
+        yield [...a];
+        return;
+      }
+      for (int i = 0; i < k; i++) {
+        yield* compute(k - 1, a);
+        if (k % 2 == 0) {
+          a.swap(i, k - 1);
+        } else {
+          a.swap(0, k - 1);
+        }
+      }
+    }
+
+    yield* compute(length, [...this]);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
