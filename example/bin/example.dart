@@ -5,7 +5,7 @@ void main(List<String> arguments) async {
   final t0 = List<int>.generate(10, (i) => i);
   final t = Run.time;
   int count = 0;
-  await for (final t in t0.permutationStream()) {
+  await for (final t in t0.permutations()) {
     count++;
   }
   Debug.info(

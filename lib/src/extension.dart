@@ -329,28 +329,29 @@ extension EnumFromList<T extends Enum> on List<T> {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 extension ListPermuationExt<T> on List<T> {
-  List<List<T>> permutations() {
-    void compute<A>(int k, List<A> a, List<List<A>> output) {
-      if (k == 1) {
-        output.add([...a]);
-        return;
-      }
-      for (int i = 0; i < k; i++) {
-        compute(k - 1, a, output);
-        if (k % 2 == 0) {
-          a.swap(i, k - 1);
-        } else {
-          a.swap(0, k - 1);
-        }
-      }
+
+  Stream<List<T>> permutations() async* {
+    final factorials = <int>[];
+    factorials.add(1);
+    for (int i = 1; i <= length; i++) {
+      factorials.add(factorials.last * i);
     }
 
-    final List<List<T>> result = [];
-    compute(length, [...this], result);
-    return result;
+    for (int i = 0; i < factorials.last; i++) {
+      List<T> onePermutation = [];
+      var temp = [...this];
+      int positionCode = i;
+      for (int position = length; position > 0; position--) {
+        final selected = positionCode ~/ factorials[position - 1];
+        onePermutation.add(temp[selected]);
+        positionCode = positionCode % factorials[position - 1];
+        temp = temp.sublist(0, selected) + temp.sublist(selected + 1);
+      }
+      yield onePermutation;
+    }
   }
 
-  Stream<List<T>> permutationStream() async* {
+  Stream<List<T>> recursivePermutationStream() async* {
     Stream<List<A>> compute<A>(int k, List<A> a) async* {
       if (k == 1) {
         yield [...a];
