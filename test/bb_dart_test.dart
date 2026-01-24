@@ -28,4 +28,16 @@ void main() {
       expect(r2, equals(r0));
     });
   });
+
+  group('Math Tests', () {
+    test('Permuations', () async {
+      const t0 = [1, 2, 3, 4, 5];
+      final sc = t0.permutations().length;
+      int ac = 0;
+      await for (final t in t0.permutationStream()) {
+        ac++;
+      }
+      expect(sc, equals(ac));
+    });
+  });
 }

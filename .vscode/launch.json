@@ -11,9 +11,10 @@
             "program": "./test/"
         },
         {
-            "name": "bb.dart",
+            "name": "example",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "cwd": "${workspaceFolder}/example"
         }
     ]
 }

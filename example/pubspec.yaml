@@ -1,0 +1,20 @@
+name: example
+description: A sample command-line application with basic argument parsing.
+version: 0.0.1
+publish_to: none
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.11.0-296.3.beta
+
+# Add regular dependencies here.
+dependencies:
+  args: ^2.7.0
+
+  bb_dart:
+    path: ../
+
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6
