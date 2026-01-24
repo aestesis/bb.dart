@@ -27,7 +27,7 @@ class Run {
 
   static Future<R> isolate<R, P>({
     required P param,
-    required R Function(P) function,
+    required FutureOr<R> Function(P) function,
   }) async {
     return await _isoMan.compute(function, param);
   }
