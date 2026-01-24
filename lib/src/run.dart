@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:isolate_manager/isolate_manager.dart';
+
 import 'extension.dart';
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Run {
+  static final _isoMan = IsolateManager.createShared();
   static double get time =>
       DateTime.now().millisecondsSinceEpoch.toDouble() / 1000;
   static Timer periodic(Duration tick, void Function(Timer timer) callback) =>
@@ -22,7 +25,12 @@ class Run {
     return c.future;
   }
 
-  // TODO: add isolate run
+  static Future<R> isolate<R, P>({
+    required P param,
+    required R Function(P) function,
+  }) async {
+    return await _isoMan.compute(function, param);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
