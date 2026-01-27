@@ -259,6 +259,10 @@ extension GeoPointIterable on Iterable<GeoPoint> {
     }
     return Distance(kilometers: d.kilometers / count);
   }
+
+  List<GeoPoint> farCenterSort() {
+    return sorted((a, b) => -averageDistance(a).compareTo(averageDistance(b)));
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
