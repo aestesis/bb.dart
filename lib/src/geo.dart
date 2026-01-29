@@ -51,6 +51,7 @@ class GeoPoint extends Point<double> {
     return GeoPoint(lng: x - other.x, lat: y - other.y);
   }
 
+  static GeoPoint get losAngeles => GeoPoint(lng: -118.243683, lat: 34.052235);
   static GeoPoint get lorient => GeoPoint(lng: -3.370, lat: 47.74);
   static GeoPoint get paris => GeoPoint(lng: 2.3522, lat: 48.8566);
   static GeoPoint get zero => GeoPoint(lng: 0, lat: 0);
