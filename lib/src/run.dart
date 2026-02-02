@@ -7,7 +7,7 @@ import 'extension.dart';
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Run {
-  static final _isoMan = IsolateManager.createShared();
+  static IsolateManagerShared? _isoMan;
   static double get time =>
       DateTime.now().millisecondsSinceEpoch.toDouble() / 1000;
   static Timer periodic(Duration tick, void Function(Timer timer) callback) =>
@@ -29,7 +29,8 @@ class Run {
     required P param,
     required FutureOr<R> Function(P) function,
   }) async {
-    return await _isoMan.compute(function, param);
+    _isoMan ??= IsolateManager.createShared();
+    return await _isoMan!.compute(function, param);
   }
 }
 
