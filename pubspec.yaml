@@ -14,7 +14,7 @@ dependencies:
   diacritic: any
   image: any
   stack_trace: any
-  isolate_manager: any
+#  isolate_manager: any
 
 
 dev_dependencies:
