@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -43,6 +42,7 @@ extension DoubleExtension on double {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 extension StringExtension on String {
   // TODO: seek internet for a more utf8 friendly regex
+  static String pathSeparator = '/';
   static final regexWords = RegExp(
     r"[a-zA-Z0-9àâäèéêëîïôœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ#]+",
   );
@@ -79,11 +79,11 @@ extension StringExtension on String {
   String? ifNotEmpty() => isEmpty ? null : this;
 
   String addFilename(String filename) {
-    return addToken(Platform.pathSeparator, filename);
+    return addToken(pathSeparator, filename);
   }
 
   String addPathSeparator([String? pathSeparator]) {
-    pathSeparator ??= Platform.pathSeparator;
+    pathSeparator ??= StringExtension.pathSeparator;
     if (endsWith(pathSeparator)) {
       return this;
     }
@@ -91,7 +91,7 @@ extension StringExtension on String {
   }
 
   String removePathSeparator([String? pathSeparator]) {
-    pathSeparator ??= Platform.pathSeparator;
+    pathSeparator ??= StringExtension.pathSeparator;
     if (endsWith(pathSeparator)) {
       return substring(0, length - 1);
     }
@@ -163,7 +163,7 @@ extension StringExtension on String {
   bool isFileExt(String ext) => fileExt() == ext;
 
   String filename({String? pathSeparator}) {
-    final separator = pathSeparator ?? Platform.pathSeparator;
+    final separator = pathSeparator ?? StringExtension.pathSeparator;
     return afterTokenLast(separator);
   }
 
@@ -329,7 +329,6 @@ extension EnumFromList<T extends Enum> on List<T> {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 extension ListPermuationExt<T> on List<T> {
-
   Stream<List<T>> permutations() async* {
     final factorials = <int>[];
     factorials.add(1);
@@ -386,6 +385,5 @@ extension RandomExt on Random {
     return id;
   }
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
