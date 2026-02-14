@@ -31,12 +31,24 @@ class Debug {
     }
   }
 
-  static void info(Object object) {
-    final f = Trace.from(StackTrace.current).frames;
-    String l = '';
+  static String _callerLocation(StackTrace stack) {
     try {
-      l = f[1].location;
+      final frames = Trace.from(stack).frames;
+      int i = 0;
+      while (i < frames.length) {
+        final f = frames[i];
+        i++;
+        if (f.location.contains('debug.dart')) {
+          if (i < frames.length) return frames[i].location;
+          return '';
+        }
+      }
     } catch (_) {}
+    return '';
+  }
+
+  static void info(Object object) {
+    final l = _callerLocation(StackTrace.current);
     if (object is Error) {
       _print('$l $object');
       _print(object.stackTrace.toString());
@@ -46,11 +58,7 @@ class Debug {
   }
 
   static void warning(Object object) {
-    final f = Trace.from(StackTrace.current).frames;
-    String l = '';
-    try {
-      l = f[1].location;
-    } catch (_) {}
+    final l = _callerLocation(StackTrace.current);
     if (object is Error) {
       print('$l $object');
       print(object.stackTrace);
@@ -60,11 +68,7 @@ class Debug {
   }
 
   static void error(Object object) {
-    final f = Trace.from(StackTrace.current).frames;
-    String l = '';
-    try {
-      l = f[1].location;
-    } catch (_) {}
+    final l = _callerLocation(StackTrace.current);
     print('--------------------------------------------');
     if (object is Error) {
       print('$l $object');
