@@ -15,6 +15,7 @@ dependencies:
   image: any
   stack_trace: any
   isolate_manager: any
+  mime: any
 
 
 dev_dependencies:
