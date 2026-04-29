@@ -215,6 +215,17 @@ extension StringExtension on String {
     return Uint8List.fromList(res);
   }
 
+  String remove({required String from, required String to}) {
+    String v = this;
+    while (true) {
+      int i = v.indexOf(from);
+      if (i < 0) return v;
+      int j = v.indexOf(to, i + from.length);
+      if (j < 0) return v;
+      v = '${v.substring(0, i)}${v.substring(j + to.length)}';
+    }
+  }
+
   static final _escapeRE = RegExp(r'(?:%[\da-fA-F]{2})+');
   String get decodedUri => // utf8 compatible cause Uri.decode is only ascii
       replaceAllMapped(_escapeRE, (m) => Uri.decodeComponent(m[0]!));
