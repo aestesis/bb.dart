@@ -9,3 +9,4 @@ export 'src/log.dart';
 export 'src/math.dart';
 export 'src/run.dart';
 export 'src/signal.dart';
+export 'src/utils.dart';
