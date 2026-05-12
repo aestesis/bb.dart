@@ -39,6 +39,22 @@ extension DoubleExtension on double {
   }
 }
 
+extension IntExtension on int {
+  String toHumanString() {
+    final v = toString();
+    String r = '';
+    for (int i = v.length - 1; i >= 0; i--) {
+      final c = v[i];
+      if ((i % 3) == 0 && i > 0 && c >= '0' && c <= '9') {
+        r = '$c$r ';
+      } else {
+        r = '$c$r';
+      }
+    }
+    return r;
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 extension StringExtension on String {
