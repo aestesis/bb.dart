@@ -43,13 +43,15 @@ extension IntExtension on int {
   String toHumanString() {
     final v = toString();
     String r = '';
+    int j = 0;
     for (int i = v.length - 1; i >= 0; i--) {
       final c = v[i];
-      if ((i % 3) == 0 && i > 0 && c >= '0' && c <= '9') {
+      if ((j % 3) == 0 && j > 0 && c >= '0' && c <= '9') {
         r = '$c$r ';
       } else {
         r = '$c$r';
       }
+      j++;
     }
     return r;
   }
