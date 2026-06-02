@@ -8,6 +8,7 @@ import 'extension.dart';
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Run {
   static IsolateManagerShared? _isoMan;
+  static int bgThreads = 2;
   static double get time =>
       DateTime.now().millisecondsSinceEpoch.toDouble() / 1000;
   static Timer periodic(Duration tick, void Function(Timer timer) callback) =>
@@ -25,7 +26,6 @@ class Run {
     return c.future;
   }
 
-  static int isolateConcurent = 2;
   static Future<void> bgRestart() async {
     await _isoMan?.restart();
   }
@@ -39,7 +39,7 @@ class Run {
     required P param,
     required FutureOr<R> Function(P) function,
   }) async {
-    _isoMan ??= IsolateManager.createShared(concurrent: isolateConcurent);
+    _isoMan ??= IsolateManager.createShared(concurrent: bgThreads);
     return await _isoMan!.compute(function, param);
   }
 }
