@@ -8,7 +8,7 @@ import 'extension.dart';
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Run {
   static IsolateManagerShared? _isoMan;
-  static int bgThreads = 2;
+  static int bgThreads = 1;
   static double get time =>
       DateTime.now().millisecondsSinceEpoch.toDouble() / 1000;
   static Timer periodic(Duration tick, void Function(Timer timer) callback) =>
