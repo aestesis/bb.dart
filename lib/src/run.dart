@@ -26,14 +26,16 @@ class Run {
   }
 
   static int isolateConcurent = 2;
-  static Future<void> isoRestart() async {
+  static Future<void> bgRestart() async {
     await _isoMan?.restart();
   }
-  static Future<void> isoStop() async {
-      await _isoMan?.stop();
-      _isoMan = null;
+
+  static Future<void> bgStop() async {
+    await _isoMan?.stop();
+    _isoMan = null;
   }
-  static Future<R> isoRun<R, P>({
+
+  static Future<R> background<R, P>({
     required P param,
     required FutureOr<R> Function(P) function,
   }) async {
