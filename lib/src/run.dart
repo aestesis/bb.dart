@@ -25,11 +25,19 @@ class Run {
     return c.future;
   }
 
-  static Future<R> isolate<R, P>({
+  static int isolateConcurent = 2;
+  static Future<void> isoRestart() async {
+    await _isoMan?.restart();
+  }
+  static Future<void> isoStop() async {
+      await _isoMan?.stop();
+      _isoMan = null;
+  }
+  static Future<R> isoRun<R, P>({
     required P param,
     required FutureOr<R> Function(P) function,
   }) async {
-    _isoMan ??= IsolateManager.createShared();
+    _isoMan ??= IsolateManager.createShared(concurrent: isolateConcurent);
     return await _isoMan!.compute(function, param);
   }
 }
