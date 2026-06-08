@@ -421,3 +421,51 @@ extension RandomExt on Random {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension ToUint32 on Uint8List {
+  Uint32List toUint32({Endian? endian}) {
+    if ((length & 3) == 0) {
+      throw Exception(
+        'wrong number of elements ($length), a multiple of 4 is needed',
+      );
+    }
+    final List<int> l = [];
+    for (int i = 0; i < length; i += 4) {
+      final b0 = this[i];
+      final b1 = this[i + 1];
+      final b2 = this[i + 2];
+      final b3 = this[i + 3];
+      if ((endian ?? Endian.host) == .little) {
+        l.add(b0 | b1 << 8 | b2 << 16 | b3 << 24);
+      } else {
+        l.add(b0 << 24 | b1 << 16 | b2 << 8 | b3);
+      }
+    }
+    return Uint32List.fromList(l);
+  }
+}
+
+extension ToUint8 on Uint32List {
+  Uint8List toUint8({Endian? endian}) {
+    final List<int> l = [];
+    for (final w in this) {
+      final b0 = w & 0xFF;
+      final b1 = (w >> 8) & 0xFF;
+      final b2 = (w >> 16) & 0xFF;
+      final b3 = (w >> 24) & 0xFF;
+      if ((endian ?? Endian.host) == .little) {
+        l.add(b0);
+        l.add(b1);
+        l.add(b2);
+        l.add(b3);
+      } else {
+        l.add(b3);
+        l.add(b2);
+        l.add(b1);
+        l.add(b0);
+      }
+    }
+    return Uint8List.fromList(l);
+  }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -118,16 +118,6 @@ class Event<T> {
   void dispose() {
     close();
   }
-
-  Event operator +(void Function(T) fn) {
-    on(fn);
-    return this;
-  }
-
-  Event operator -(void Function(T) fn) {
-    off(fn);
-    return this;
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
