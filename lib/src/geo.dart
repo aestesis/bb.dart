@@ -232,6 +232,10 @@ class Distance {
     return Distance._fromMeters(_meters * factor);
   }
 
+  Distance operator /(num factor) {
+    return Distance._fromMeters(_meters / factor);
+  }
+
   bool operator <(Distance other) => _meters < other._meters;
   bool operator <=(Distance other) => _meters <= other._meters;
   bool operator >(Distance other) => _meters > other._meters;
