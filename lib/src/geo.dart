@@ -78,6 +78,39 @@ class GeoPoint extends Point<double> {
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return Distance(meters: earthRadius * c);
   }
+
+  /// bearing in degree, 0: north, 90: east
+  GeoPoint? atDistance({required Distance distance, required double bearing}) {
+    double getRad(double degrees) {
+      return degrees * pi / 180;
+    }
+
+    double getDeg(double rad) {
+      return rad * 180 / pi;
+    }
+
+    final brad = getRad(bearing);
+    final d = distance.meters / 6371000;
+    final latS = getRad(latitude);
+    final lonS = getRad(longitude);
+    final latD = asin(sin(latS) * cos(d) + cos(latS) * sin(d) * cos(brad));
+    final lonD =
+        lonS +
+        atan2(sin(brad) * sin(d) * cos(latS), cos(d) - sin(latS) * sin(latD));
+    if (lonD.isNaN || latD.isNaN) return null;
+    return GeoPoint(lat: getDeg(latD), lng: getDeg(lonD));
+  }
+
+  GeoRect bounds({required Distance distance}) {
+    const deg = <double>[0, 90, 180, 270];
+    final points = <GeoPoint>[
+      this,
+      ...deg
+          .map((d) => atDistance(distance: distance, bearing: d))
+          .whereType<GeoPoint>(),
+    ];
+    return GeoRect.boundsFromPoints(points);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
