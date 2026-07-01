@@ -281,7 +281,15 @@ class Distance {
   int compareTo(Distance other) => _meters.compareTo(other._meters);
 
   @override
-  String toString() => '$_meters meters';
+  String toString() {
+    if (_meters < 1000) {
+      return '${_meters.toFixed(0)}m';
+    }
+    if (kilometers >= 10) {
+      return '${kilometers.toFixed(0)}km';
+    }
+    return '${kilometers.toFixed(1)}km';
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
