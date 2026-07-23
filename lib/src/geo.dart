@@ -111,6 +111,8 @@ class GeoPoint extends Point<double> {
     ];
     return GeoRect.boundsFromPoints(points);
   }
+
+  String get googleMapsUrl => 'https://www.google.com/maps/@$lat,$lng,15z';
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
