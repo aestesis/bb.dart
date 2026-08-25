@@ -1,14 +1,14 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Range<T extends num> {
-  final T? min;
-  final T? max;
-  const Range({this.min, this.max});
+  final T min;
+  final T max;
+  const Range({required this.min, required this.max});
   const Range.at(T p, {T? margin})
     : min = (p - (margin ?? 0)) as T,
       max = (p + (margin ?? 0)) as T;
   Range<T> expand(T margin) =>
-      Range(min: (min! - margin) as T, max: (max! + margin) as T);
+      Range(min: (min - margin) as T, max: (max + margin) as T);
   @override
   String toString() => 'Range<${T.runtimeType}>(min:$min, max:$max)';
   @override
@@ -19,6 +19,13 @@ class Range<T extends num> {
   static Range<double> get zero => const Range<double>.at(0.0);
   static Range<double> get infinity =>
       const Range<double>(min: double.negativeInfinity, max: double.infinity);
+  bool contains(T v) => v <= max && v >= min;
+  bool get isEmpty => max < min;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+extension ListRange on List {
+  Range<int> get range => Range(max: length - 1, min: 0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
